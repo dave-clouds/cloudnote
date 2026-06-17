@@ -6,7 +6,7 @@ The codebase is intentionally written with heavy inline comments to serve as a l
 
 ---
 
-## 🌐 Live Demo
+## 🌐 Live Preview
 
 **[https://dave-clouds.github.io/cloudnote/](https://dave-clouds.github.io/cloudnote/)**
 
