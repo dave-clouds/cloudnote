@@ -378,28 +378,192 @@ body {
 }
 
 /* ==============================================
-   TO-DO PLACEHOLDER
+   TO-DO FORM
 =============================================== */
-.todo-placeholder {
-  grid-column: 1 / -1;
-  background: var(--color-surface);
-  border: 1.5px dashed var(--color-border);
-  border-radius: var(--radius-lg);
-  padding: var(--spacing-xl);
+
+/* Single-row layout: text input stretches, button stays fixed */
+.todo-form-card {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.todo-input-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+.todo-input-row .form-input {
+  flex: 1;       /* input grows to fill available space */
+  resize: none;  /* no resize handle — it's a single line */
+}
+
+/* ==============================================
+   TO-DO COUNTER BADGE
+   Pill shown on the sidebar tab next to the label
+=============================================== */
+.todo-badge {
+  margin-left: auto;          /* push to the far right of the tab */
+  background: rgba(255,255,255,0.22);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;       /* fully rounded pill shape */
+  min-width: 20px;
   text-align: center;
+  line-height: 1.6;
+}
+
+/* When the todo tab is active the badge gets a contrasting tint */
+.nav-tab.active .todo-badge {
+  background: rgba(255,255,255,0.30);
+}
+
+/* ==============================================
+   TO-DO LIST — container
+   Spans all grid columns so it renders as a
+   full-width vertical list, not a card grid
+=============================================== */
+.todo-list-wrapper {
+  grid-column: 1 / -1;  /* stretch across the entire grid row */
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+/* ==============================================
+   TO-DO ITEM
+=============================================== */
+.todo-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow var(--transition), opacity var(--transition);
+}
+
+.todo-item:hover {
+  box-shadow: var(--shadow-hover);
+}
+
+/* Fade completed items slightly to show they're done */
+.todo-item.completed {
+  opacity: 0.6;
+}
+
+/* ==============================================
+   CUSTOM CHECKBOX
+   We hide the native <input type="checkbox"> and
+   build a styled box using a <span> sibling.
+   The :checked pseudo-class on the hidden input
+   drives the visual state via CSS.
+=============================================== */
+.todo-checkbox-label {
+  position: relative;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  flex-shrink: 0;   /* never squish the checkbox */
+}
+
+/* Hide the browser's default checkbox entirely */
+.todo-checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+/* Our custom visual checkbox */
+.todo-checkbox-custom {
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  background: var(--color-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), border-color var(--transition);
+  flex-shrink: 0;
+}
+
+/* When the hidden input is checked, style the custom box */
+.todo-checkbox-input:checked + .todo-checkbox-custom {
+  background: var(--color-brand);
+  border-color: var(--color-brand);
+}
+
+/* Draw the checkmark using a pseudo-element (no image needed) */
+.todo-checkbox-input:checked + .todo-checkbox-custom::after {
+  content: '';
+  width: 5px;
+  height: 9px;
+  border: 2px solid #ffffff;
+  border-top: none;
+  border-left: none;
+  transform: rotate(45deg) translateY(-1px);
+  display: block;
+}
+
+/* Hover ring on the label */
+.todo-checkbox-label:hover .todo-checkbox-custom {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(91, 164, 207, 0.15);
+}
+
+/* ==============================================
+   TO-DO ITEM BODY — text + date
+=============================================== */
+.todo-item-body {
+  flex: 1;           /* stretch to fill remaining width */
+  min-width: 0;      /* allow text to truncate if needed */
+}
+
+.todo-item-text {
+  display: block;
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  word-break: break-word;
+  transition: text-decoration var(--transition), color var(--transition);
+}
+
+/* Strike through the text on completed items */
+.todo-item.completed .todo-item-text {
+  text-decoration: line-through;
   color: var(--color-text-muted);
 }
 
-.todo-placeholder .todo-icon {
-  font-size: 3rem;
+.todo-item-date {
+  display: block;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: 2px;
+}
+
+/* ==============================================
+   TO-DO EMPTY STATE
+=============================================== */
+.todo-empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--color-text-muted);
+}
+
+.todo-empty-state .todo-empty-icon {
+  font-size: 3.5rem;
   display: block;
   margin-bottom: var(--spacing-md);
 }
 
-.todo-placeholder h2 {
-  font-size: var(--font-size-xl);
-  color: var(--color-text-primary);
-  margin-bottom: var(--spacing-sm);
+.todo-empty-state p {
+  font-size: var(--font-size-lg);
 }
 
 /* ==============================================

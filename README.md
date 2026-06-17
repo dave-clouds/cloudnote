@@ -1,6 +1,14 @@
 # ☁️ CloudNote
 
-A clean, modern, client-side note-taking application built with vanilla HTML, CSS, and JavaScript. CloudNote was developed as a portfolio milestone project to demonstrate fundamental front-end engineering skills — including DOM manipulation, array-driven state management, browser persistence, and responsive layout design — without relying on any frameworks or external libraries.
+A clean, modern, client-side productivity dashboard built with vanilla HTML, CSS, and JavaScript. CloudNote lets users create and manage personal notes and to-do tasks entirely within the browser — no server, no database, no sign-up required. All data is persisted automatically using the browser's built-in `localStorage` API, with notes and tasks stored under independent keys so they never interfere with each other.
+
+The codebase is intentionally written with heavy inline comments to serve as a learning resource. Every function explains the JavaScript concept it demonstrates alongside the feature it implements.
+
+---
+
+## 🌐 Live Demo
+
+**[https://dave-clouds.github.io/cloudnote/](https://dave-clouds.github.io/cloudnote/)**
 
 ---
 
@@ -10,8 +18,8 @@ A clean, modern, client-side note-taking application built with vanilla HTML, CS
 2. [Features](#-features)
 3. [Technologies Used](#-technologies-used)
 4. [File Structure](#-file-structure)
-5. [How the Notes System Works](#-how-the-notes-system-works)
-6. [LocalStorage Persistence](#-localstorage-persistence)
+5. [How It Works](#-how-it-works)
+6. [LocalStorage Architecture](#-localstorage-architecture)
 7. [Getting Started](#-getting-started)
 8. [Future Roadmap](#-future-roadmap)
 9. [Author](#-author)
@@ -20,9 +28,12 @@ A clean, modern, client-side note-taking application built with vanilla HTML, CS
 
 ## 🌐 Project Overview
 
-CloudNote is a fully functional, single-page note-taking dashboard. Users can create, read, update, and delete personal notes entirely within the browser — no server, no database, no sign-up required. All data is persisted automatically using the browser's built-in `localStorage` API, meaning notes survive page refreshes and browser restarts.
+CloudNote is a fully functional, single-page productivity dashboard with two independent modules:
 
-The codebase is intentionally written with heavy inline comments to serve as a learning resource. Every function explains the JavaScript concept it demonstrates alongside the feature it implements.
+- **My Notes** — a full CRUD note-taking system with a responsive card grid
+- **To-Do List** — a task manager with custom checkboxes, completion tracking, and a live counter badge
+
+Both modules persist their data independently through `localStorage`, meaning everything survives page refreshes and browser restarts without any backend.
 
 ---
 
@@ -30,32 +41,39 @@ The codebase is intentionally written with heavy inline comments to serve as a l
 
 ### 📝 Notes (Full CRUD)
 - **Create** — Write a note with a title and body, then save it instantly.
-- **Read** — All saved notes are displayed in a responsive card grid.
-- **Update** — Click the edit icon on any card to load it back into the form for changes.
-- **Delete** — Remove any note permanently with a single click (with confirmation).
+- **Read** — All saved notes are displayed in a responsive CSS Grid card layout.
+- **Update** — Click the edit icon on any card to reload it into the form for changes.
+- **Delete** — Remove any note permanently (with confirmation dialog).
 
-### 💾 LocalStorage Persistence
-- Notes are automatically saved to `localStorage` after every create, update, and delete operation.
-- On page load the app checks for existing saved data and restores it seamlessly.
-- First-time visitors are greeted with two onboarding seed notes; returning users always see their own data.
+### ✅ To-Do List (Full CRUD)
+- **Create** — Type a task and press Enter or click "Add Task".
+- **Complete** — Click the custom styled checkbox to mark a task done (strikethrough + fade).
+- **Toggle** — Click again to mark a completed task incomplete.
+- **Delete** — Remove any task instantly with the trash icon.
+- **Counter Badge** — A live pill badge on the sidebar tab always shows the number of incomplete tasks. Disappears when all tasks are done.
+- **Empty State** — A friendly prompt appears when the task list is empty.
+
+### 💾 Independent LocalStorage Persistence
+- Notes save automatically under `cloudnote_data` after every create, update, or delete.
+- Tasks save automatically under `cloudnote_todos` after every create, toggle, or delete.
+- The two storage keys are completely isolated — clearing notes never affects tasks and vice versa.
+- First-time visitors receive two onboarding seed notes. Tasks start from a blank slate.
 
 ### ⌨️ Keyboard Shortcuts
 | Shortcut | Action |
 |---|---|
-| `Enter` (in title field) | Jump focus to the content textarea |
-| `Ctrl + Enter` / `Cmd + Enter` (in content) | Save the current note |
+| `Enter` (in note title field) | Jump focus to the content textarea |
+| `Ctrl + Enter` / `Cmd + Enter` (in note content) | Save the current note |
+| `Enter` (in task input) | Add the new task |
 
 ### 🔒 Secure HTML Escaping
-User-supplied text is never injected into `innerHTML` without sanitization. A dedicated `escapeHTML()` helper converts `<`, `>`, `"`, and `&` characters into safe HTML entities, preventing accidental (or malicious) script injection.
-
-### 🗂️ Sidebar Tab Navigation
-- **My Notes** — displays the note input form and the card grid.
-- **To-Do List** — reserved panel with a "coming soon" placeholder (module in progress).
+User-supplied text is never injected into `innerHTML` without sanitization. A dedicated `escapeHTML()` helper converts dangerous characters into safe HTML entities across both modules.
 
 ### 📐 Responsive Layout
-- A fixed navigation sidebar sits on the left; the main canvas occupies the remaining width.
-- The notes grid uses `CSS Grid` with `auto-fill` and `minmax(260px, 1fr)` columns, so it naturally reflows from one column on mobile to many columns on wide screens.
-- Breakpoints at `768px` and `560px` progressively adapt the sidebar and canvas padding.
+- Fixed sidebar on the left; flexible canvas on the right.
+- Notes use `CSS Grid` with `auto-fill` / `minmax(260px, 1fr)` — reflowing automatically from one column to many.
+- Tasks use a full-width flex column that spans all grid cells.
+- Breakpoints at `768px` and `560px` progressively adapt the layout for mobile.
 
 ---
 
@@ -77,23 +95,43 @@ No build tools, bundlers, or frameworks are used. The project runs directly in a
 
 ```
 cloudnote/
-├── index.html      # Application shell — layout, sidebar, form, and workspace container
-├── style.css       # Full design system — CSS variables, grid, cards, and responsive rules
-├── app.js          # All JavaScript — state, CRUD functions, persistence, and event wiring
+├── index.html      # App shell — sidebar, canvas header, notes form, todo form, workspace
+├── style.css       # Design system — CSS variables, grid, note cards, todo items, checkboxes
+├── app.js          # All JavaScript — two independent modules (Notes + Todos), persistence, events
 └── README.md       # Project documentation (this file)
 ```
 
-Each file has a single, clear responsibility. Keeping them separated makes the codebase easy to navigate and extend.
+Each file has a single, clear responsibility. The two feature modules (Notes and Todos) live inside `app.js` but are clearly sectioned — their state arrays, render functions, CRUD operations, and persistence helpers never cross-reference each other.
 
 ---
 
-## ⚙️ How the Notes System Works
+## ⚙️ How It Works
 
-CloudNote follows a **single source of truth** pattern. One global array — `let notes = []` — owns all application data. The UI is always a reflection of that array, never the other way around.
+### Architecture — Single Source of Truth (×2)
 
-### Data Shape
+Each module owns one global array that is the authoritative record for its data:
 
-Each note is a plain JavaScript object:
+```
+let notes = [];    // owns all note objects   — persisted to 'cloudnote_data'
+let todos = [];    // owns all task objects   — persisted to 'cloudnote_todos'
+```
+
+The UI is always a *reflection* of these arrays, never the source. Every mutation triggers the same three-step cycle:
+
+```
+User action
+    │
+    ▼
+Mutate array[]        ← push / filter / toggle property
+    │
+    ▼
+render<Module>()      ← wipe workspace, loop array, inject HTML
+    │
+    ▼
+save<Module>ToLocalStorage()   ← JSON.stringify → localStorage
+```
+
+### Note Data Shape
 
 ```js
 {
@@ -104,92 +142,114 @@ Each note is a plain JavaScript object:
 }
 ```
 
-### The Render Cycle
+### Task Data Shape
 
-Every mutation to the `notes` array triggers the same sequence:
-
-```
-User action (click / keypress)
-        │
-        ▼
-Mutate notes[]          ← push / splice / filter
-        │
-        ▼
-renderNotes()           ← wipe workspace, loop array, inject HTML cards
-        │
-        ▼
-saveToLocalStorage()    ← JSON.stringify(notes) → localStorage
+```js
+{
+  id:        1718000000001,    // Date.now() — always unique
+  text:      "Finish CloudNote",
+  completed: false,            // toggled by the custom checkbox
+  createdAt: "6/17/2026"       // toLocaleDateString() — compact form
+}
 ```
 
-This predictable one-way flow means the displayed cards and stored data are always in sync.
+### Notes CRUD Function Map
 
-### CRUD Function Map
-
-| Operation | Function | Array Method Used |
+| Operation | Function | Array Method |
 |---|---|---|
-| Create | `handleSave()` (create path) | `Array.push()` |
+| Create | `handleSave()` — create path | `Array.push()` |
 | Read | `renderNotes()` | `Array.map()` + `Array.join()` |
-| Update | `handleSave()` (edit path) | `Array.findIndex()` + direct mutation |
+| Update | `handleSave()` — edit path | `Array.findIndex()` + mutation |
 | Delete | `deleteNote(id)` | `Array.filter()` |
+
+### Todos CRUD Function Map
+
+| Operation | Function | Array Method |
+|---|---|---|
+| Create | `addTodo()` | `Array.push()` |
+| Read | `renderTodos()` | `Array.map()` + `Array.join()` |
+| Toggle | `toggleTodo(id)` | `Array.findIndex()` + `!bool` |
+| Delete | `deleteTodo(id)` | `Array.filter()` |
+
+### Custom Checkbox — How It Works
+
+The browser's default `<input type="checkbox">` is hidden with CSS (`opacity: 0; width: 0; height: 0`). A sibling `<span>` is styled as the visible box. When the hidden input receives a `:checked` state, the CSS adjacent sibling selector (`+`) activates the visual fill and checkmark drawn via a `::after` pseudo-element — no images or icon fonts required.
 
 ---
 
-## 💾 LocalStorage Persistence
+## 💾 LocalStorage Architecture
 
-The browser's `localStorage` API stores data as **strings only**. Because our notes are JavaScript objects inside an array, two conversion steps are required.
+### Independent Keys
 
-### Saving — `saveToLocalStorage()`
+```
+localStorage
+├── cloudnote_data    →  JSON string of the notes[]  array
+└── cloudnote_todos   →  JSON string of the todos[]  array
+```
+
+The two keys are entirely separate. Operating on one never touches the other.
+
+### Save Flow
 
 ```js
-// 1. Serialize: JavaScript array → JSON string
-const serialized = JSON.stringify(notes);
+// Notes
+localStorage.setItem('cloudnote_data',  JSON.stringify(notes));
 
-// 2. Write: store the string under a namespaced key
-localStorage.setItem('cloudnote_data', serialized);
+// Todos
+localStorage.setItem('cloudnote_todos', JSON.stringify(todos));
 ```
 
-`JSON.stringify()` converts the array and all its objects into a portable text format that `localStorage` can store. Without it, writing the array directly would produce the useless string `"[object Object]"`.
+`JSON.stringify()` is required because `localStorage` only stores strings. Without it, writing an array produces the useless string `"[object Object]"`.
 
-### Loading — `loadFromLocalStorage()`
+### Load Flow
 
 ```js
-// 1. Read: retrieve the raw string (or null if never set)
-const stored = localStorage.getItem('cloudnote_data');
-
-// 2. Deserialize: JSON string → JavaScript array
-return JSON.parse(stored);
+const raw = localStorage.getItem('cloudnote_data');  // returns string | null
+const arr = JSON.parse(raw);                          // reconstructs JS array
 ```
 
-`JSON.parse()` reverses the process — it reads the text and reconstructs the original JavaScript data structure so the rest of the app can work with real objects and arrays again.
+`JSON.parse()` reverses the serialization so the rest of the app receives real JavaScript objects it can work with. Both loaders are wrapped in `try/catch` to handle any corrupted data gracefully.
 
-### First-Visit vs. Returning-User Logic (`init()`)
+### Initialisation Decision Tree (`init()`)
 
 ```
-Page loads → loadFromLocalStorage()
+Page loads
+    │
+    ├── NOTES ──────────────────────────────────────────────────
+    │       loadFromLocalStorage()
+    │               │
+    │       ┌───────┴──────────┐
+    │   length > 0         length === 0
+    │   (returning)        (first visit)
+    │       │                   │
+    │   notes = saved      notes = [2 seed notes]
+    │                      saveToLocalStorage()
+    │       │                   │
+    │       └───────┬───────────┘
+    │           renderNotes()
+    │
+    └── TODOS ──────────────────────────────────────────────────
+            loadTodosFromLocalStorage()
                     │
-         ┌──────────┴──────────┐
-    length > 0              length === 0
-    (returning user)        (first-time visitor)
-         │                       │
-    notes = savedNotes      notes = [seed note 1, seed note 2]
-                            saveToLocalStorage()  ← persist seeds immediately
-         │                       │
-         └──────────┬────────────┘
-                renderNotes()
+            ┌───────┴──────────┐
+        length > 0         length === 0
+        (returning)        (first visit)
+            │                   │
+        todos = saved       todos = []   (blank slate, no seed)
+            │                   │
+            └───────┬───────────┘
+                updateTodoBadge()   (badge shown on sidebar immediately)
 ```
-
-Saved data is **never overwritten** unless the user explicitly creates, edits, or deletes a note.
 
 ---
 
 ## 🚀 Getting Started
 
-CloudNote requires no installation, build step, or server. Because the project serves static files, any simple HTTP server works.
+CloudNote requires no installation, build step, or server. Any simple static file server works.
 
 ### Option 1 — Python (built-in, zero setup)
 
 ```bash
-# Python 3
 python3 -m http.server 5000
 ```
 
@@ -201,25 +261,22 @@ Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ri
 
 ### Option 3 — Any Static Host
 
-Upload the three files (`index.html`, `style.css`, `app.js`) to any static hosting platform — GitHub Pages, Netlify, Vercel, or Replit — and the app is live immediately.
+Upload `index.html`, `style.css`, and `app.js` to GitHub Pages, Netlify, Vercel, or Replit and the app is live immediately.
 
-> **Note:** Because CloudNote uses `localStorage`, each browser/device maintains its own independent set of notes. Data does not sync across devices.
+> **Note:** Because CloudNote uses `localStorage`, each browser/device maintains its own independent data. Notes and tasks do not sync across devices.
 
 ---
 
 ## 🗺️ Future Roadmap
 
-The following features are planned for upcoming development milestones:
-
 | Feature | Description |
 |---|---|
-| ✅ **To-Do List Module** | Full task management with custom checkboxes and localStorage persistence |
 | 🔍 **Search Notes** | Live filter bar that narrows the card grid as the user types |
-| 🔢 **Note Counter** | Dynamic badge in the sidebar showing the current note count |
-| 📭 **Enhanced Empty State** | Illustrated empty-state UI with a clear call-to-action prompt |
-| 🌙 **Dark Mode** | Toggle between light and dark themes, preference saved to localStorage |
+| 🔢 **Note Counter** | Dynamic badge in the sidebar showing the total note count |
+| 📭 **Enhanced Empty State** | Illustrated empty-state UI with a clear call-to-action |
+| 🌙 **Dark Mode** | Toggle between light and dark themes, preference saved to `localStorage` |
 | 📤 **Export Notes** | Download all notes as a `.json` or `.txt` file for backup |
-| ♿ **Accessibility Improvements** | Full keyboard navigation, ARIA labels, and focus management enhancements |
+| ♿ **Accessibility Improvements** | Full keyboard navigation, ARIA labels, and focus management |
 
 ---
 

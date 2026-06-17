@@ -1,16 +1,17 @@
 // =============================================================
 //  CloudNote — app.js
-//  Vanilla JavaScript powering all note CRUD operations and
-//  tab-switching. Read the comments to understand each step!
+//  Vanilla JavaScript powering all note CRUD operations,
+//  the To-Do List module, and tab-switching.
+//  Read the comments throughout to understand each concept!
 // =============================================================
 
 
 // -------------------------------------------------------------
 // 1. GLOBAL STATE
-//    We keep all notes in a single array that lives in memory
-//    while the page is open. An array is perfect here because
-//    we can push new items in, filter items out, and loop
-//    through every note whenever we need to re-draw the screen.
+//    Each module owns its own array. Notes and Todos never
+//    mix — they are completely independent data structures,
+//    stored under different LocalStorage keys, and rendered
+//    by different functions.
 // -------------------------------------------------------------
 let notes = [];
 //  ^ Each element will look like this:
@@ -21,6 +22,16 @@ let notes = [];
 //      date:    "June 17, 2026 at 3:04 PM"
 //    }
 
+let todos = [];
+//  ^ The To-Do array lives alongside notes but is completely
+//    separate. Each element will look like this:
+//    {
+//      id:        1718000000001,  // Date.now() — always unique
+//      text:      "Finish CloudNote",
+//      completed: false,          // toggled by the custom checkbox
+//      createdAt: "6/17/2026"     // toLocaleDateString() — short form
+//    }
+
 
 // -------------------------------------------------------------
 // 2. DOM REFERENCES
@@ -28,15 +39,28 @@ let notes = [];
 //    we'll interact with most often. Doing this once at the top
 //    is faster than calling document.getElementById() every
 //    time a user clicks something.
+//
+//    Notes elements and Todo elements are grouped separately
+//    so it's easy to see at a glance which module owns what.
 // -------------------------------------------------------------
+
+// --- Notes module elements ---
 const noteTitleInput   = document.getElementById('note-title');
 const noteContentInput = document.getElementById('note-content');
 const saveBtn          = document.getElementById('save-btn');
 const cancelBtn        = document.getElementById('cancel-btn');
+const notesForm        = document.getElementById('notes-form');
+
+// --- To-Do module elements ---
+const todoInput        = document.getElementById('todo-input');
+const addTodoBtn       = document.getElementById('add-todo-btn');
+const todoForm         = document.getElementById('todo-form');
+const todoBadge        = document.getElementById('todo-badge');
+
+// --- Shared layout elements ---
 const workspace        = document.getElementById('workspace');
 const canvasTitle      = document.getElementById('canvas-title');
 const canvasSubtitle   = document.getElementById('canvas-subtitle');
-const notesForm        = document.getElementById('notes-form');
 const navTabs          = document.querySelectorAll('.nav-tab');
 //  ^ querySelectorAll returns a NodeList (like an array) of
 //    ALL elements that match the CSS selector '.nav-tab'.
@@ -53,12 +77,17 @@ const navTabs          = document.querySelectorAll('.nav-tab');
 //    - It can only store STRINGS (not objects or arrays).
 //    - All reads/writes are synchronous (instant, no await).
 //
-//  We use a single key so all our data lives in one place.
+//  INDEPENDENT KEYS — Notes and Todos each have their own key.
+//  This means:
+//    • Deleting all notes never touches the todos.
+//    • Deleting all todos never touches the notes.
+//    • Each module can evolve its data shape independently.
 // =============================================================
 
-const STORAGE_KEY = 'cloudnote_data';
-//  ^ Defining the key as a constant means we never risk a
-//    typo causing a mismatch between saves and loads.
+const STORAGE_KEY      = 'cloudnote_data';   // Notes persistence key
+const TODO_STORAGE_KEY = 'cloudnote_todos';  // Todos persistence key
+//  ^ Two separate keys = two completely isolated data buckets
+//    in the same browser storage area.
 
 
 // -------------------------------------------------------------
@@ -121,6 +150,41 @@ function loadFromLocalStorage() {
     //  In our case that's always an array of note objects.
   } catch (error) {
     console.warn('CloudNote: could not parse saved data. Starting fresh.', error);
+    return [];
+  }
+}
+
+
+// -------------------------------------------------------------
+// saveTodosToLocalStorage()
+//
+//  Mirror of saveToLocalStorage() but for the todos array.
+//  Writes to TODO_STORAGE_KEY so it never collides with notes.
+// -------------------------------------------------------------
+function saveTodosToLocalStorage() {
+  localStorage.setItem(TODO_STORAGE_KEY, JSON.stringify(todos));
+  //  Same pattern as notes: stringify the array into a string,
+  //  store it under a dedicated key. Nothing else is touched.
+}
+
+
+// -------------------------------------------------------------
+// loadTodosFromLocalStorage()
+//
+//  Reads and parses the saved todos. Returns [] if nothing
+//  has been stored yet, or if the data is somehow corrupted.
+// -------------------------------------------------------------
+function loadTodosFromLocalStorage() {
+  const stored = localStorage.getItem(TODO_STORAGE_KEY);
+
+  if (stored === null) {
+    return []; // First visit — no todos have been saved yet.
+  }
+
+  try {
+    return JSON.parse(stored);
+  } catch (error) {
+    console.warn('CloudNote: could not parse saved todos. Starting fresh.', error);
     return [];
   }
 }
@@ -421,11 +485,229 @@ function cancelEdit() {
 
 
 // =============================================================
-//  11. TAB TOGGLE — switchTab(tabName)
+//  TO-DO MODULE — functions 11 through 14
 //
-//  Controls which view is visible. There are two tabs:
-//    "notes"  → shows the form + note grid
-//    "todo"   → hides the form + shows a coming-soon message
+//  This entire block is self-contained. It has its own:
+//    • State array  (todos[])
+//    • Render func  (renderTodos)
+//    • CRUD funcs   (addTodo, toggleTodo, deleteTodo)
+//    • Badge update (updateTodoBadge)
+//    • Persistence  (saveTodosToLocalStorage / load...)
+//  None of these functions touch the notes[] array or the
+//  notes storage key — the two modules are fully isolated.
+// =============================================================
+
+
+// -------------------------------------------------------------
+// 11. updateTodoBadge()
+//
+//  Counts the incomplete tasks and shows that number in the
+//  pill badge next to the sidebar tab.
+//
+//  A badge of "0" is hidden entirely to keep the UI clean —
+//  we only show a number when there's real work remaining.
+// -------------------------------------------------------------
+function updateTodoBadge() {
+
+  // .filter() counts only tasks where completed is still false.
+  const remaining = todos.filter(t => !t.completed).length;
+
+  if (remaining > 0) {
+    todoBadge.textContent    = remaining;
+    todoBadge.style.display  = 'inline-block';
+  } else {
+    todoBadge.style.display  = 'none';
+    //  Hiding at 0 prevents showing "0" which looks odd and
+    //  adds no useful information.
+  }
+}
+
+
+// -------------------------------------------------------------
+// 12. renderTodos()
+//
+//  Clears the workspace and rebuilds the entire To-Do list
+//  from the todos[] array. Called after every mutation.
+//
+//  Structure injected:
+//    <div class="todo-list-wrapper">   ← spans full grid width
+//      <li class="todo-item [completed]">
+//        custom checkbox | text + date | delete button
+//      </li>
+//      ...
+//    </div>
+// -------------------------------------------------------------
+function renderTodos() {
+
+  // Always sync the badge whenever we render.
+  updateTodoBadge();
+
+  workspace.innerHTML = '';
+
+  // Empty state — no tasks yet.
+  if (todos.length === 0) {
+    workspace.innerHTML = `
+      <div class="todo-empty-state">
+        <span class="todo-empty-icon">✅</span>
+        <p>No tasks yet — add your first one above!</p>
+      </div>
+    `;
+    return;
+  }
+
+  // Build a wrapper div that spans the full grid, then fill it
+  // with one <div> per todo item.
+  //
+  // Why a wrapper instead of direct grid children?
+  // The workspace uses CSS Grid for notes cards. The To-Do list
+  // is a vertical column. Wrapping in a grid-column:1/-1 div
+  // lets us use flexbox internally without fighting the grid.
+  const itemsHTML = todos.map(todo => {
+
+    // We pass the id into onclick so each button knows exactly
+    // which task to target when clicked.
+    return `
+      <div class="todo-item ${todo.completed ? 'completed' : ''}" data-id="${todo.id}">
+
+        <!-- CUSTOM CHECKBOX
+             The hidden <input> tracks the true/false state.
+             The visible <span> is styled via CSS using the
+             adjacent sibling selector (+) triggered by :checked.
+             onclick fires toggleTodo() because pointer-events
+             on the input are disabled — the label handles clicks. -->
+        <label class="todo-checkbox-label" title="${todo.completed ? 'Mark incomplete' : 'Mark complete'}">
+          <input
+            type="checkbox"
+            class="todo-checkbox-input"
+            ${todo.completed ? 'checked' : ''}
+            onchange="toggleTodo(${todo.id})"
+          />
+          <span class="todo-checkbox-custom"></span>
+        </label>
+
+        <!-- Task text and created date -->
+        <div class="todo-item-body">
+          <span class="todo-item-text">${escapeHTML(todo.text)}</span>
+          <span class="todo-item-date">Added ${todo.createdAt}</span>
+        </div>
+
+        <!-- Delete button -->
+        <button
+          class="icon-btn delete"
+          title="Delete task"
+          onclick="deleteTodo(${todo.id})"
+        >
+          <i data-feather="trash-2"></i>
+        </button>
+
+      </div>
+    `;
+  }).join('');
+
+  workspace.innerHTML = `<div class="todo-list-wrapper">${itemsHTML}</div>`;
+
+  // Re-initialize Feather Icons on the newly injected HTML.
+  feather.replace();
+}
+
+
+// -------------------------------------------------------------
+// 13. addTodo()
+//
+//  Reads the todo input field, creates a new task object,
+//  pushes it to the todos array, persists, and re-renders.
+//
+//  Data shape created here:
+//    { id, text, completed: false, createdAt }
+// -------------------------------------------------------------
+function addTodo() {
+
+  const text = todoInput.value.trim();
+
+  // Don't add a blank task.
+  if (!text) {
+    todoInput.focus();
+    todoInput.style.borderColor = 'var(--color-danger)';
+    setTimeout(() => todoInput.style.borderColor = '', 1000);
+    return;
+  }
+
+  // Build the new task object.
+  const newTodo = {
+    id:        Date.now(),
+    //  Date.now() gives us a millisecond timestamp — unique as
+    //  long as the user isn't creating tasks faster than 1/ms.
+    text:      text,
+    completed: false,
+    //  All new tasks start incomplete. The user checks them off.
+    createdAt: new Date().toLocaleDateString(),
+    //  toLocaleDateString() returns a short date like "6/17/2026"
+    //  which is more compact than the full formatDate() output.
+  };
+
+  todos.push(newTodo);
+  //  push() adds the new task to the END of the array.
+  //  The most recently added task always appears at the bottom.
+
+  todoInput.value = ''; // Clear input for the next task.
+  todoInput.focus();    // Keep focus so the user can type immediately.
+
+  renderTodos();
+  saveTodosToLocalStorage();
+}
+
+
+// -------------------------------------------------------------
+// 14. toggleTodo(id)
+//
+//  Flips the completed boolean on a single task.
+//  Called by the custom checkbox's onchange event.
+//
+//  We use findIndex() to locate the task, then directly mutate
+//  its .completed property — no need to replace the whole array.
+// -------------------------------------------------------------
+function toggleTodo(id) {
+
+  const index = todos.findIndex(t => t.id === id);
+  //  findIndex() returns the position (-1 if not found).
+
+  if (index === -1) return; // Safety check.
+
+  // Flip the boolean: true → false, false → true.
+  todos[index].completed = !todos[index].completed;
+  //  The ! (NOT) operator inverts a boolean.
+  //  If the task was false (incomplete), it becomes true (done).
+  //  If it was true (done), it becomes false (back on the list).
+
+  renderTodos();
+  saveTodosToLocalStorage();
+}
+
+
+// -------------------------------------------------------------
+// 15. deleteTodo(id)
+//
+//  Removes a task permanently using the same .filter() pattern
+//  used in deleteNote() — builds a new array that excludes the
+//  task matching the given id.
+// -------------------------------------------------------------
+function deleteTodo(id) {
+
+  todos = todos.filter(t => t.id !== id);
+  //  Every task where t.id !== id survives into the new array.
+  //  The one matching task is silently dropped.
+
+  renderTodos();
+  saveTodosToLocalStorage();
+}
+
+
+// =============================================================
+//  16. TAB TOGGLE — switchTab(tabName)
+//
+//  Controls which view is visible. Two tabs:
+//    "notes"  → shows notes form + card grid
+//    "todo"   → shows todo form + task list
 // =============================================================
 function switchTab(tabName) {
 
@@ -440,57 +722,52 @@ function switchTab(tabName) {
     }
   });
 
-  // --- Swap out the canvas content based on chosen tab ---
+  // --- Swap visible form and render the right workspace ---
   if (tabName === 'notes') {
 
-    // Show the input form.
+    // Show Notes form, hide Todo form.
     notesForm.style.display = 'block';
+    todoForm.style.display  = 'none';
 
-    // Update the header text.
     canvasTitle.textContent    = 'All Notes';
     canvasSubtitle.textContent = 'Capture your thoughts below.';
 
-    // Re-render the notes grid.
     renderNotes();
 
   } else if (tabName === 'todo') {
 
-    // Hide the notes input form — To-Do has its own UI (coming soon).
+    // Show Todo form, hide Notes form.
     notesForm.style.display = 'none';
+    todoForm.style.display  = 'block';
 
-    // Update the header text.
     canvasTitle.textContent    = 'To-Do List';
-    canvasSubtitle.textContent = 'Stay on top of your tasks.';
+    canvasSubtitle.textContent = 'Track your tasks below.';
 
-    // Replace the workspace content with a placeholder message.
-    workspace.innerHTML = `
-      <div class="todo-placeholder">
-        <span class="todo-icon">🚧</span>
-        <h2>Coming Soon!</h2>
-        <p>To-Do list functionality is on its way.<br>
-           Check back soon for tasks, priorities, and more.</p>
-      </div>
-    `;
+    renderTodos();
+    // Focus the todo input so the user can start typing immediately.
+    todoInput.focus();
   }
 }
 
 
 // =============================================================
-//  12. EVENT LISTENERS
+//  17. EVENT LISTENERS
 //
 //  Event listeners are the bridge between user actions (clicks,
 //  key presses) and our JavaScript functions. We attach them
 //  once here at the bottom so all our functions are already
 //  defined when the listeners fire.
+//
+//  Notes listeners and Todo listeners are grouped separately.
 // =============================================================
 
-// Save / Update button
+// --- Notes: Save / Update button ---
 saveBtn.addEventListener('click', handleSave);
 
-// Cancel button (only visible during edit mode)
+// --- Notes: Cancel edit mode ---
 cancelBtn.addEventListener('click', cancelEdit);
 
-// Allow pressing Enter in the title field to jump to content
+// --- Notes: Enter in title jumps to content textarea ---
 noteTitleInput.addEventListener('keydown', function (event) {
   if (event.key === 'Enter') {
     event.preventDefault();       // stop the form from submitting
@@ -498,7 +775,7 @@ noteTitleInput.addEventListener('keydown', function (event) {
   }
 });
 
-// Allow Ctrl+Enter (or Cmd+Enter on Mac) inside the textarea to save
+// --- Notes: Ctrl+Enter (Cmd+Enter) inside textarea saves ---
 noteContentInput.addEventListener('keydown', function (event) {
   if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
     event.preventDefault();
@@ -506,7 +783,21 @@ noteContentInput.addEventListener('keydown', function (event) {
   }
 });
 
-// Wire up each sidebar tab to the switchTab() function.
+// --- Todo: "Add Task" button click ---
+addTodoBtn.addEventListener('click', addTodo);
+
+// --- Todo: pressing Enter in the task input also adds a task ---
+todoInput.addEventListener('keydown', function (event) {
+  if (event.key === 'Enter') {
+    event.preventDefault();
+    addTodo();
+    //  This mirrors the Ctrl+Enter pattern from Notes —
+    //  pressing Enter is the natural way to submit a single-
+    //  line input, so we wire it up for a smoother experience.
+  }
+});
+
+// --- Sidebar tabs: wire each tab to switchTab() ---
 // 'data-tab' attribute on each button tells us which tab was clicked.
 navTabs.forEach(tab => {
   tab.addEventListener('click', function () {
@@ -516,39 +807,34 @@ navTabs.forEach(tab => {
 
 
 // =============================================================
-//  13. INITIALISATION — runs once when the page first loads
+//  18. INITIALISATION — runs once when the page first loads
 //
-//  Decision tree:
-//    1. Ask LocalStorage if any notes have been saved before.
-//    2. YES → load them into the notes array and render.
-//    3. NO  → seed two example notes, save them to LocalStorage
-//             (so the next refresh loads them), then render.
+//  Handles BOTH modules independently:
 //
-//  This ensures returning users always see their own data, while
-//  brand-new users get a helpful starting point instead of a
-//  blank, confusing screen.
+//  NOTES decision tree:
+//    1. Check LocalStorage for saved notes.
+//    2. Found  → restore into notes[] and render.
+//    3. Not found → seed two example notes, persist, render.
+//
+//  TODOS decision tree:
+//    1. Check LocalStorage for saved todos.
+//    2. Found  → restore into todos[].
+//    3. Not found → start with an empty list (no seeding needed).
+//
+//  The two modules never interfere with each other here.
+//  Notes are loaded under 'cloudnote_data'.
+//  Todos are loaded under 'cloudnote_todos'.
 // =============================================================
 (function init() {
 
-  // --- Step 1: Ask LocalStorage what it has ---
+  // ---- NOTES ------------------------------------------------
   const savedNotes = loadFromLocalStorage();
-  //  loadFromLocalStorage() returns either:
-  //    • An array of note objects  → user has visited before
-  //    • An empty array []         → first-time visitor
 
   if (savedNotes.length > 0) {
-    // --- Step 2: Returning user — restore their notes ---
-    //  We assign the parsed array directly to our global `notes`
-    //  variable. From this point the rest of the app works exactly
-    //  as if the notes had been created this session.
+    // Returning user — restore their notes exactly as saved.
     notes = savedNotes;
-
   } else {
-    // --- Step 3: First-time visitor — seed example notes ---
-    //  The key check: savedNotes.length === 0 is ONLY true when
-    //  LocalStorage returned null (key never set) OR when the user
-    //  has deleted all their notes. Either way, seeding is safe
-    //  because we never reach here if real saved data exists.
+    // First-time visitor — seed two onboarding notes.
     notes = [
       {
         id:      Date.now() - 2000,
@@ -559,20 +845,33 @@ navTabs.forEach(tab => {
       {
         id:      Date.now() - 1000,
         title:   'Keyboard Shortcuts',
-        content: 'Press Enter in the title field to jump to the content area. Press Ctrl+Enter (Cmd+Enter on Mac) inside the content area to save your note instantly.',
+        content: 'Press Enter in the title field to jump to the content area. Press Ctrl+Enter (Cmd+Enter on Mac) inside the content area to save your note instantly. Switch to the To-Do tab to manage your tasks!',
         date:    formatDate(new Date()),
       },
     ];
-
-    // Immediately persist the seed notes so that a refresh will
-    // load them from LocalStorage instead of re-seeding.
-    // Without this call the seed notes would vanish on refresh.
+    // Persist seeds immediately so a refresh loads them.
     saveToLocalStorage();
   }
 
-  // Draw the initial set of cards regardless of which path above
-  // we took — the `notes` array is now populated either way.
-  renderNotes();
+  renderNotes(); // Draw the notes grid (default view on load).
+
+  // ---- TODOS ------------------------------------------------
+  const savedTodos = loadTodosFromLocalStorage();
+  //  Unlike notes, todos have no seed data. An empty list is a
+  //  perfectly valid starting state — there's nothing confusing
+  //  about a blank To-Do tab on a first visit.
+
+  if (savedTodos.length > 0) {
+    todos = savedTodos; // Restore saved tasks.
+  }
+  //  If savedTodos is empty we just leave todos = [] as-is.
+
+  // Update the badge immediately so the sidebar already shows
+  // a count if the user has outstanding tasks from last session.
+  updateTodoBadge();
+  //  We call updateTodoBadge() here (not renderTodos()) because
+  //  the workspace is currently showing the Notes grid. We only
+  //  render the todo list when the user clicks the tab.
 
 })();
 // The parentheses at the end immediately invoke this function —
