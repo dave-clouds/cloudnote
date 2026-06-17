@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "Tq0ROW2E_ptbvWOVgV7wW"
+uri = "file://README.md"
+type = "text"
+title = "CloudNote — README.md"
