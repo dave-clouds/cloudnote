@@ -34,6 +34,8 @@
         </button>
         <button class="nav-tab" data-tab="todo">
           ✅ To-Do List
+          <!-- Counter badge — updated by JS whenever todos change -->
+          <span class="todo-badge" id="todo-badge" style="display:none;"></span>
         </button>
       </nav>
 
@@ -56,7 +58,7 @@
       </header>
 
       <!-- ----------------------------------------
-           INPUT FORM AREA
+           INPUT FORM AREA — NOTES
            Visible when "My Notes" tab is active
       ----------------------------------------- -->
       <section class="input-form-area" id="notes-form">
@@ -81,6 +83,28 @@
             </button>
             <button class="btn btn-ghost" id="cancel-btn" style="display:none;">
               Cancel
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------
+           INPUT FORM AREA — TO-DO
+           Visible when "To-Do List" tab is active
+           Hidden on page load (display:none)
+      ----------------------------------------- -->
+      <section class="input-form-area" id="todo-form" style="display:none;">
+        <div class="form-card todo-form-card">
+          <div class="todo-input-row">
+            <input
+              type="text"
+              id="todo-input"
+              class="form-input"
+              placeholder="Add a new task..."
+              maxlength="120"
+            />
+            <button class="btn btn-primary" id="add-todo-btn">
+              + Add Task
             </button>
           </div>
         </div>
