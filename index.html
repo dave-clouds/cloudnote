@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CloudNote</title>
+  <link rel="stylesheet" href="style.css" />
+  <!-- Feather Icons for clean edit/delete icons -->
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+
+  <!-- =============================================
+       LAYOUT WRAPPER
+       Holds the sidebar + main canvas side by side
+  ============================================== -->
+  <div class="app-wrapper">
+
+    <!-- ==========================================
+         NAVIGATION SIDEBAR (fixed on the left)
+    =========================================== -->
+    <aside class="sidebar">
+
+      <!-- Branding -->
+      <div class="sidebar-brand">
+        <span class="brand-icon">☁️</span>
+        <span class="brand-name">CloudNote</span>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="sidebar-nav">
+        <button class="nav-tab active" data-tab="notes">
+          📝 My Notes
+        </button>
+        <button class="nav-tab" data-tab="todo">
+          ✅ To-Do List
+        </button>
+      </nav>
+
+      <!-- Sidebar footer -->
+      <div class="sidebar-footer">
+        <p>Your ideas, in the cloud.</p>
+      </div>
+
+    </aside>
+
+    <!-- ==========================================
+         MAIN CANVAS (flexible area on the right)
+    =========================================== -->
+    <main class="main-canvas">
+
+      <!-- Canvas Header -->
+      <header class="canvas-header">
+        <h1 class="canvas-title" id="canvas-title">All Notes</h1>
+        <p class="canvas-subtitle" id="canvas-subtitle">Capture your thoughts below.</p>
+      </header>
+
+      <!-- ----------------------------------------
+           INPUT FORM AREA
+           Visible when "My Notes" tab is active
+      ----------------------------------------- -->
+      <section class="input-form-area" id="notes-form">
+        <div class="form-card">
+          <input
+            type="text"
+            id="note-title"
+            class="form-input"
+            placeholder="Note title..."
+            maxlength="80"
+          />
+          <textarea
+            id="note-content"
+            class="form-textarea"
+            placeholder="Start writing your note here..."
+            rows="4"
+          ></textarea>
+          <div class="form-actions">
+            <!-- data-editing stores the ID of the note being edited (empty = create mode) -->
+            <button class="btn btn-primary" id="save-btn" data-editing="">
+              Save Note
+            </button>
+            <button class="btn btn-ghost" id="cancel-btn" style="display:none;">
+              Cancel
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ----------------------------------------
+           WORKSPACE GRID
+           This div is populated by app.js
+      ----------------------------------------- -->
+      <section class="workspace" id="workspace">
+        <!-- Note cards or To-Do list are injected here by JavaScript -->
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+  <!-- Initialize Feather Icons after the DOM is ready -->
+  <script>feather.replace();</script>
+</body>
+</html>

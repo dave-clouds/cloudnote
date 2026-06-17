@@ -1,0 +1,448 @@
+/* ==============================================
+   ROOT VARIABLES — Cloud Aesthetic Design System
+   Change these to retheme the entire app at once
+=============================================== */
+:root {
+  /* Colors */
+  --color-bg:           #f0f4f8;       /* soft off-white page background */
+  --color-sidebar-bg:   #1e2a3a;       /* deep slate for sidebar */
+  --color-sidebar-text: #c8d8e8;       /* muted sky blue text on sidebar */
+  --color-brand:        #5ba4cf;       /* primary sky blue */
+  --color-brand-hover:  #4a8fb8;       /* slightly darker on hover */
+  --color-surface:      #ffffff;       /* card / form surface */
+  --color-border:       #dce6f0;       /* subtle border lines */
+  --color-text-primary: #2c3e50;       /* main dark text */
+  --color-text-muted:   #7f95a8;       /* timestamps, hints */
+  --color-danger:       #e05c6a;       /* delete / destructive */
+  --color-danger-hover: #c44f5c;
+  --color-success:      #52b788;       /* save button confirm */
+
+  /* Sidebar */
+  --sidebar-width:      240px;
+
+  /* Spacing */
+  --spacing-xs:   4px;
+  --spacing-sm:   8px;
+  --spacing-md:   16px;
+  --spacing-lg:   24px;
+  --spacing-xl:   40px;
+
+  /* Typography */
+  --font-family:  'Segoe UI', system-ui, -apple-system, sans-serif;
+  --font-size-sm: 0.78rem;
+  --font-size-md: 0.95rem;
+  --font-size-lg: 1.1rem;
+  --font-size-xl: 1.5rem;
+
+  /* Effects */
+  --radius-sm:    6px;
+  --radius-md:    12px;
+  --radius-lg:    18px;
+  --shadow-card:  0 2px 12px rgba(91, 164, 207, 0.10);
+  --shadow-hover: 0 6px 24px rgba(91, 164, 207, 0.18);
+  --transition:   0.3s ease;
+}
+
+/* ==============================================
+   RESET & BASE
+=============================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  font-family: var(--font-family);
+  background-color: var(--color-bg);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-md);
+  line-height: 1.6;
+}
+
+/* ==============================================
+   APP WRAPPER — sidebar + canvas side by side
+=============================================== */
+.app-wrapper {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ==============================================
+   SIDEBAR
+=============================================== */
+.sidebar {
+  width: var(--sidebar-width);
+  background-color: var(--color-sidebar-bg);
+  color: var(--color-sidebar-text);
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 100vh;
+  padding: var(--spacing-lg) 0;
+  z-index: 100;
+}
+
+/* Brand row */
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  padding: 0 var(--spacing-lg) var(--spacing-lg);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+
+.brand-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+}
+
+.brand-name {
+  font-size: var(--font-size-xl);
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: -0.3px;
+}
+
+/* Navigation tabs */
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-lg) var(--spacing-md);
+  flex: 1;
+}
+
+.nav-tab {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  width: 100%;
+  padding: 10px var(--spacing-md);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-sidebar-text);
+  font-size: var(--font-size-md);
+  font-family: var(--font-family);
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition), color var(--transition);
+}
+
+.nav-tab:hover {
+  background: rgba(91, 164, 207, 0.15);
+  color: #ffffff;
+}
+
+.nav-tab.active {
+  background: var(--color-brand);
+  color: #ffffff;
+  font-weight: 600;
+}
+
+/* Sidebar footer */
+.sidebar-footer {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  color: rgba(200, 216, 232, 0.4);
+  border-top: 1px solid rgba(255,255,255,0.07);
+}
+
+/* ==============================================
+   MAIN CANVAS
+=============================================== */
+.main-canvas {
+  margin-left: var(--sidebar-width);
+  flex: 1;
+  padding: var(--spacing-xl);
+  max-width: 1100px;
+}
+
+/* Canvas header */
+.canvas-header {
+  margin-bottom: var(--spacing-lg);
+}
+
+.canvas-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  letter-spacing: -0.5px;
+}
+
+.canvas-subtitle {
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-md);
+}
+
+/* ==============================================
+   INPUT FORM AREA
+=============================================== */
+.input-form-area {
+  margin-bottom: var(--spacing-xl);
+}
+
+.form-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 10px var(--spacing-md);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  background: var(--color-bg);
+  transition: border-color var(--transition), box-shadow var(--transition);
+  resize: vertical;
+  outline: none;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(91, 164, 207, 0.15);
+  background: #ffffff;
+}
+
+.form-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
+/* ==============================================
+   BUTTONS
+=============================================== */
+.btn {
+  padding: 10px var(--spacing-lg);
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition), transform var(--transition), box-shadow var(--transition);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: var(--color-brand);
+  color: #ffffff;
+}
+
+.btn-primary:hover {
+  background: var(--color-brand-hover);
+  box-shadow: 0 4px 14px rgba(91, 164, 207, 0.35);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+.btn-ghost:hover {
+  background: var(--color-bg);
+  color: var(--color-text-primary);
+}
+
+/* ==============================================
+   WORKSPACE — NOTE CARDS GRID
+=============================================== */
+.workspace {
+  /* Responsive grid: columns shrink down to 260px each */
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: var(--spacing-lg);
+}
+
+/* Individual note card */
+.note-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-card);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  transition: box-shadow var(--transition), transform var(--transition);
+}
+
+.note-card:hover {
+  box-shadow: var(--shadow-hover);
+  transform: translateY(-3px);
+}
+
+.note-card-title {
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+  color: var(--color-text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.note-card-content {
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  flex: 1;
+  /* Clamp content to 4 lines with a trailing ellipsis */
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.note-card-timestamp {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-muted);
+  margin-top: var(--spacing-xs);
+}
+
+/* Edit / Delete icon row */
+.note-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-xs);
+  border-top: 1px solid var(--color-border);
+  padding-top: var(--spacing-sm);
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background var(--transition), color var(--transition);
+  color: var(--color-text-muted);
+}
+
+.icon-btn:hover {
+  background: var(--color-bg);
+}
+
+.icon-btn.edit:hover {
+  color: var(--color-brand);
+}
+
+.icon-btn.delete:hover {
+  color: var(--color-danger);
+}
+
+/* ==============================================
+   EMPTY STATE
+=============================================== */
+.empty-state {
+  grid-column: 1 / -1;    /* span across all grid columns */
+  text-align: center;
+  padding: var(--spacing-xl) 0;
+  color: var(--color-text-muted);
+}
+
+.empty-state .empty-icon {
+  font-size: 3.5rem;
+  display: block;
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-state p {
+  font-size: var(--font-size-lg);
+}
+
+/* ==============================================
+   TO-DO PLACEHOLDER
+=============================================== */
+.todo-placeholder {
+  grid-column: 1 / -1;
+  background: var(--color-surface);
+  border: 1.5px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--color-text-muted);
+}
+
+.todo-placeholder .todo-icon {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: var(--spacing-md);
+}
+
+.todo-placeholder h2 {
+  font-size: var(--font-size-xl);
+  color: var(--color-text-primary);
+  margin-bottom: var(--spacing-sm);
+}
+
+/* ==============================================
+   RESPONSIVE ADJUSTMENTS
+=============================================== */
+@media (max-width: 768px) {
+  :root {
+    --sidebar-width: 200px;
+  }
+
+  .main-canvas {
+    padding: var(--spacing-lg);
+  }
+
+  .canvas-title {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    flex-direction: row;
+    align-items: center;
+    padding: var(--spacing-md);
+  }
+
+  .sidebar-nav {
+    flex-direction: row;
+    padding: 0;
+  }
+
+  .sidebar-footer {
+    display: none;
+  }
+
+  .app-wrapper {
+    flex-direction: column;
+  }
+
+  .main-canvas {
+    margin-left: 0;
+  }
+}
