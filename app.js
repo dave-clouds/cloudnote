@@ -52,6 +52,7 @@ const cancelBtn        = document.getElementById('cancel-btn');
 const notesForm        = document.getElementById('notes-form');
 const searchInput      = document.getElementById('search-input');
 const notesSearchArea  = document.getElementById('notes-search-area');
+const notesBadge       = document.getElementById('notes-badge');
 
 // --- To-Do module elements ---
 const todoInput        = document.getElementById('todo-input');
@@ -225,6 +226,13 @@ function formatDate(dateObj) {
 //            5. Re-initialize Feather Icons on the new markup
 // =============================================================
 function renderNotes(displayArray) {
+
+  // Always sync the notes badge whenever we render — whether
+  // that's the full list, a filtered subset, or an empty state.
+  // The badge always reflects notes.length (the real total),
+  // NOT the filtered subset, so searching for "cloud" doesn't
+  // make the badge drop to "1" when 5 notes exist.
+  updateNotesBadge();
 
   // If no argument was passed, default to the full notes array.
   // The || operator returns the right side when the left is falsy.
@@ -618,7 +626,37 @@ function cancelEdit() {
 
 
 // -------------------------------------------------------------
-// 11. updateTodoBadge()
+// 11. updateNotesBadge()
+//
+//  Mirrors updateTodoBadge() for the My Notes tab.
+//  Shows the TOTAL number of saved notes in the pill.
+//
+//  Design choice: unlike the todo badge (which only counts
+//  incomplete tasks), the notes badge counts every note —
+//  including ones being edited — because all notes have equal
+//  value and there's no "done" state for a note.
+//
+//  Hidden entirely at 0 to avoid showing an empty "0" pill
+//  when the workspace is blank (first visit, or after deleting
+//  the last note).
+// -------------------------------------------------------------
+function updateNotesBadge() {
+
+  const total = notes.length;
+  //  notes.length is the simplest possible count — no filter
+  //  needed because every entry in notes[] is a "live" note.
+
+  if (total > 0) {
+    notesBadge.textContent   = total;
+    notesBadge.style.display = 'inline-block';
+  } else {
+    notesBadge.style.display = 'none';
+  }
+}
+
+
+// -------------------------------------------------------------
+// 12. updateTodoBadge()
 //
 //  Counts the incomplete tasks and shows that number in the
 //  pill badge next to the sidebar tab.

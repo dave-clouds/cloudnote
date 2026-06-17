@@ -477,6 +477,30 @@ body {
 }
 
 /* ==============================================
+   NOTES COUNTER BADGE
+   Mirrors the todo badge — shows total note count
+   next to the My Notes sidebar tab.
+=============================================== */
+.notes-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.22);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Active notes tab: badge shifts to a solid accent tint so it
+   stands out against the highlighted tab background */
+.nav-tab.active .notes-badge {
+  background: rgba(255,255,255,0.30);
+}
+
+/* ==============================================
    TO-DO LIST — container
    Spans all grid columns so it renders as a
    full-width vertical list, not a card grid
