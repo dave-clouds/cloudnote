@@ -50,6 +50,9 @@ const noteContentInput = document.getElementById('note-content');
 const saveBtn          = document.getElementById('save-btn');
 const cancelBtn        = document.getElementById('cancel-btn');
 const notesForm        = document.getElementById('notes-form');
+const searchInput      = document.getElementById('search-input');
+const notesSearchArea  = document.getElementById('notes-search-area');
+const notesBadge       = document.getElementById('notes-badge');
 
 // --- To-Do module elements ---
 const todoInput        = document.getElementById('todo-input');
@@ -207,11 +210,14 @@ function formatDate(dateObj) {
 
 
 // =============================================================
-//  4. READ — renderNotes()
+//  4. READ — renderNotes(displayArray)
 //
-//  This is the most important function in the app. Every time
-//  the data changes (add / edit / delete), we call renderNotes()
-//  to completely rebuild the visible cards from scratch.
+//  Rebuilds the visible card grid from scratch on every call.
+//
+//  Parameter:
+//    displayArray (optional) — the subset of notes to show.
+//    When omitted, the full notes[] array is used (normal view).
+//    When passed from filterNotes(), it contains only matches.
 //
 //  Pattern:  1. Wipe the old HTML
 //            2. Check for an empty array → show a placeholder
@@ -219,21 +225,39 @@ function formatDate(dateObj) {
 //            4. Inject the finished HTML into the DOM
 //            5. Re-initialize Feather Icons on the new markup
 // =============================================================
-function renderNotes() {
+function renderNotes(displayArray) {
+
+  // Always sync the notes badge whenever we render — whether
+  // that's the full list, a filtered subset, or an empty state.
+  // The badge always reflects notes.length (the real total),
+  // NOT the filtered subset, so searching for "cloud" doesn't
+  // make the badge drop to "1" when 5 notes exist.
+  updateNotesBadge();
+
+  // If no argument was passed, default to the full notes array.
+  // The || operator returns the right side when the left is falsy.
+  // undefined (no argument) is falsy, so we fall back to notes[].
+  const list = displayArray || notes;
 
   // Step 1 — Clear whatever HTML is currently in the workspace.
-  // innerHTML = '' is the quickest way to empty a container.
   workspace.innerHTML = '';
 
-  // Step 2 — If the notes array has no items, show an empty
-  // state so the user knows what to do next.
-  if (notes.length === 0) {
-    workspace.innerHTML = `
-      <div class="empty-state">
-        <span class="empty-icon">📋</span>
-        <p>No notes yet — write your first one above!</p>
-      </div>
-    `;
+  // Step 2 — Show the appropriate empty state based on context.
+  if (list.length === 0) {
+    // Two different messages depending on WHY the list is empty:
+    //   • Search returned nothing → "no matching notes"
+    //   • Notes array itself is empty → "no notes yet"
+    const isSearching = searchInput && searchInput.value.trim() !== '';
+
+    workspace.innerHTML = isSearching
+      ? `<div class="empty-state">
+           <span class="empty-icon">🔍</span>
+           <p>No matching notes found.</p>
+         </div>`
+      : `<div class="empty-state">
+           <span class="empty-icon">📋</span>
+           <p>No notes yet — write your first one above!</p>
+         </div>`;
     return; // Exit early; nothing else to render.
   }
 
@@ -241,7 +265,9 @@ function renderNotes() {
   // We use .map() to transform each note object into an HTML
   // string, then .join('') to stitch those strings into one big
   // block with no commas between them.
-  const cardsHTML = notes.map(note => {
+  // NOTE: we loop `list`, not `notes`, so that when filterNotes()
+  // passes a filtered subset we only render the matching cards.
+  const cardsHTML = list.map(note => {
 
     // Each note gets a card. We embed the note's unique `id`
     // directly in the button as a data attribute so we can read
@@ -300,8 +326,70 @@ function renderNotes() {
 }
 
 
+// =============================================================
+//  5. SEARCH — filterNotes()
+//
+//  Called on every keystroke inside the search bar.
+//  Reads the query, filters notes[], and passes the results
+//  to renderNotes() as the optional displayArray argument.
+//
+//  How the search state flows:
+//
+//    keystroke  →  'input' event fires
+//                       │
+//                  filterNotes() reads searchInput.value
+//                       │
+//                  query === ''   →  renderNotes()        (show all)
+//                  query !== ''   →  Array.filter()
+//                                         │
+//                                    renderNotes(matches)  (show subset)
+//
+//  Key design decisions:
+//    • We NEVER write to LocalStorage during a search — it's a
+//      read-only view of the existing notes[] array.
+//    • We NEVER mutate notes[] — the filter builds a fresh
+//      temporary array and throws it away after each render.
+//    • Case-insensitive matching is achieved by lowercasing BOTH
+//      the query and the fields before comparing.
+// =============================================================
+function filterNotes() {
+
+  // Read the current value and strip surrounding whitespace.
+  const query = searchInput.value.trim().toLowerCase();
+  //  .toLowerCase() normalises the query so "Cloud" matches
+  //  "cloud", "CLOUD", "Cloud", etc.
+
+  if (query === '') {
+    // Empty bar → show all notes with no filtering.
+    // Calling renderNotes() with no argument defaults to notes[].
+    renderNotes();
+    return;
+  }
+
+  // Array.filter() returns a NEW array containing only the
+  // elements for which the callback returns true.
+  // The original notes[] is never modified.
+  const matches = notes.filter(note => {
+
+    // Lowercase both sides so comparison is case-insensitive.
+    const inTitle   = note.title.toLowerCase().includes(query);
+    const inContent = note.content.toLowerCase().includes(query);
+
+    // Keep this note if the query appears in EITHER the title
+    // OR the content. The || (OR) operator returns true if at
+    // least one side is true.
+    return inTitle || inContent;
+  });
+
+  // Pass the filtered subset to renderNotes().
+  // renderNotes() handles the "no matches" empty state internally
+  // by checking whether searchInput has a value.
+  renderNotes(matches);
+}
+
+
 // -------------------------------------------------------------
-// 5. HELPER — escapeHTML()
+// 6. HELPER — escapeHTML()
 //    Security note: never inject user-typed text directly into
 //    innerHTML without escaping it first. If someone types
 //    <script>alert('hi')</script> as a note, we don't want
@@ -419,6 +507,12 @@ function editNote(id) {
   // Show the Cancel button so the user can abort the edit.
   cancelBtn.style.display = 'inline-flex';
 
+  // Size the textarea to fit the loaded content immediately.
+  // Without this call the box would stay at its CSS min-height
+  // even if the note is much longer, causing a jarring jump
+  // the moment the user starts typing.
+  autoResizeTextarea();
+
   // Scroll to the top of the page and focus the title input
   // so the user knows the form is ready.
   noteTitleInput.focus();
@@ -462,12 +556,45 @@ function deleteNote(id) {
 
 
 // -------------------------------------------------------------
-// 9. HELPER — clearForm()
-//    Empties both input fields. Called after every save.
+// 9. HELPER — autoResizeTextarea()
+//
+//  Makes the note content textarea grow as the user types,
+//  eliminating the internal scrollbar while keeping the
+//  manual resize handle available.
+//
+//  How it works:
+//    1. Set height to 'auto' — this forces the browser to
+//       recalculate and collapse the element to its minimum.
+//    2. Read scrollHeight — the total height needed to display
+//       ALL the content without clipping.
+//    3. Set height to that scrollHeight value in pixels.
+//
+//  Why the two-step 'auto' then scrollHeight?
+//  If we only set height = scrollHeight, the element never
+//  shrinks when the user deletes lines — scrollHeight would
+//  already be equal to the current (too-tall) height. Resetting
+//  to 'auto' first forces a fresh measurement every time.
+//
+//  CSS requirement: overflow: hidden on .form-textarea
+//  ensures no scrollbar flashes during the resize calculation.
+// -------------------------------------------------------------
+function autoResizeTextarea() {
+  noteContentInput.style.height = 'auto';
+  noteContentInput.style.height = noteContentInput.scrollHeight + 'px';
+}
+
+
+// -------------------------------------------------------------
+// 10. HELPER — clearForm()
+//     Empties both input fields and resets textarea height.
+//     Called after every save, cancel, or edit operation.
 // -------------------------------------------------------------
 function clearForm() {
-  noteTitleInput.value   = '';
-  noteContentInput.value = '';
+  noteTitleInput.value          = '';
+  noteContentInput.value        = '';
+  // Reset textarea back to its CSS min-height so the form
+  // doesn't stay tall after a long note is saved.
+  noteContentInput.style.height = '';
 }
 
 
@@ -499,7 +626,37 @@ function cancelEdit() {
 
 
 // -------------------------------------------------------------
-// 11. updateTodoBadge()
+// 11. updateNotesBadge()
+//
+//  Mirrors updateTodoBadge() for the My Notes tab.
+//  Shows the TOTAL number of saved notes in the pill.
+//
+//  Design choice: unlike the todo badge (which only counts
+//  incomplete tasks), the notes badge counts every note —
+//  including ones being edited — because all notes have equal
+//  value and there's no "done" state for a note.
+//
+//  Hidden entirely at 0 to avoid showing an empty "0" pill
+//  when the workspace is blank (first visit, or after deleting
+//  the last note).
+// -------------------------------------------------------------
+function updateNotesBadge() {
+
+  const total = notes.length;
+  //  notes.length is the simplest possible count — no filter
+  //  needed because every entry in notes[] is a "live" note.
+
+  if (total > 0) {
+    notesBadge.textContent   = total;
+    notesBadge.style.display = 'inline-block';
+  } else {
+    notesBadge.style.display = 'none';
+  }
+}
+
+
+// -------------------------------------------------------------
+// 12. updateTodoBadge()
 //
 //  Counts the incomplete tasks and shows that number in the
 //  pill badge next to the sidebar tab.
@@ -725,26 +882,31 @@ function switchTab(tabName) {
   // --- Swap visible form and render the right workspace ---
   if (tabName === 'notes') {
 
-    // Show Notes form, hide Todo form.
-    notesForm.style.display = 'block';
-    todoForm.style.display  = 'none';
+    // Show Notes form + search bar, hide Todo form.
+    notesForm.style.display       = 'block';
+    notesSearchArea.style.display = 'block';
+    todoForm.style.display        = 'none';
 
     canvasTitle.textContent    = 'All Notes';
     canvasSubtitle.textContent = 'Capture your thoughts below.';
+
+    // Clear any stale search query so returning to the tab always
+    // shows the full notes grid rather than a previous filter.
+    searchInput.value = '';
 
     renderNotes();
 
   } else if (tabName === 'todo') {
 
-    // Show Todo form, hide Notes form.
-    notesForm.style.display = 'none';
-    todoForm.style.display  = 'block';
+    // Show Todo form, hide Notes form + search bar.
+    notesForm.style.display       = 'none';
+    notesSearchArea.style.display = 'none';
+    todoForm.style.display        = 'block';
 
     canvasTitle.textContent    = 'To-Do List';
     canvasSubtitle.textContent = 'Track your tasks below.';
 
     renderTodos();
-    // Focus the todo input so the user can start typing immediately.
     todoInput.focus();
   }
 }
@@ -782,6 +944,19 @@ noteContentInput.addEventListener('keydown', function (event) {
     handleSave();
   }
 });
+
+// --- Notes: Auto-resize textarea as the user types ---
+// The 'input' event fires on every character typed, pasted,
+// or deleted — making it the right hook for live resizing.
+// We also call autoResizeTextarea() when loading a note into
+// edit mode (in editNote()) so the box sizes to existing content.
+noteContentInput.addEventListener('input', autoResizeTextarea);
+
+// --- Notes: Live search on every keystroke ---
+// The 'input' event fires after EVERY change to the field
+// (typing, pasting, clearing with backspace) — perfect for
+// real-time filtering without needing a submit button.
+searchInput.addEventListener('input', filterNotes);
 
 // --- Todo: "Add Task" button click ---
 addTodoBtn.addEventListener('click', addTodo);

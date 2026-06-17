@@ -184,6 +184,50 @@ body {
 }
 
 /* ==============================================
+   SEARCH BAR
+   Sits between the notes form and the workspace.
+   Shown only when the "My Notes" tab is active.
+=============================================== */
+.search-bar-area {
+  position: relative;        /* anchor for the icon pseudo-element */
+  margin-bottom: var(--spacing-lg);
+}
+
+.search-input {
+  width: 100%;
+  padding: 11px var(--spacing-md) 11px 42px; /* left padding makes room for icon */
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-card);
+  outline: none;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.search-input:focus {
+  border-color: var(--color-brand);
+  box-shadow: 0 0 0 3px rgba(91, 164, 207, 0.15);
+}
+
+.search-input::placeholder {
+  color: var(--color-text-muted);
+}
+
+/* Icon overlaid on the left side of the search bar */
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 1rem;
+  pointer-events: none;  /* click-through so the icon doesn't block input focus */
+  line-height: 1;
+}
+
+/* ==============================================
    INPUT FORM AREA
 =============================================== */
 .input-form-area {
@@ -214,6 +258,19 @@ body {
   transition: border-color var(--transition), box-shadow var(--transition);
   resize: vertical;
   outline: none;
+}
+
+/* ---- Auto-expanding textarea override ----
+   min-height gives a generous starting canvas.
+   overflow: hidden hides the scrollbar while JavaScript
+   is dynamically setting the height to scrollHeight.
+   resize: vertical is preserved so the user can still
+   manually drag to make it even taller if they want.     */
+.form-textarea {
+  min-height: 130px;
+  overflow: hidden;   /* JS sets height = scrollHeight, so no scroll needed */
+  resize: vertical;   /* user can still drag the handle to resize manually  */
+  line-height: 1.65;
 }
 
 .form-input:focus,
@@ -416,6 +473,30 @@ body {
 
 /* When the todo tab is active the badge gets a contrasting tint */
 .nav-tab.active .todo-badge {
+  background: rgba(255,255,255,0.30);
+}
+
+/* ==============================================
+   NOTES COUNTER BADGE
+   Mirrors the todo badge — shows total note count
+   next to the My Notes sidebar tab.
+=============================================== */
+.notes-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.22);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  min-width: 20px;
+  text-align: center;
+  line-height: 1.6;
+}
+
+/* Active notes tab: badge shifts to a solid accent tint so it
+   stands out against the highlighted tab background */
+.nav-tab.active .notes-badge {
   background: rgba(255,255,255,0.30);
 }
 
