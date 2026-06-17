@@ -42,8 +42,92 @@ const navTabs          = document.querySelectorAll('.nav-tab');
 //    ALL elements that match the CSS selector '.nav-tab'.
 
 
+// =============================================================
+//  3. PERSISTENCE LAYER — LocalStorage helpers
+//
+//  LocalStorage is a key/value store built into every browser.
+//  It survives page refreshes and browser restarts, making it
+//  perfect for lightweight client-side persistence.
+//
+//  The two rules of LocalStorage:
+//    - It can only store STRINGS (not objects or arrays).
+//    - All reads/writes are synchronous (instant, no await).
+//
+//  We use a single key so all our data lives in one place.
+// =============================================================
+
+const STORAGE_KEY = 'cloudnote_data';
+//  ^ Defining the key as a constant means we never risk a
+//    typo causing a mismatch between saves and loads.
+
+
 // -------------------------------------------------------------
-// 3. HELPER — formatDate()
+// saveToLocalStorage()
+//
+//  Serializes the entire notes array into a JSON string and
+//  writes it to LocalStorage under our storage key.
+//
+//  Why JSON.stringify()?
+//  LocalStorage only accepts strings. Our `notes` variable is
+//  a JavaScript array of objects — a complex data structure.
+//  JSON.stringify() converts it into a flat text representation,
+//  for example:
+//    [{"id":1718000000000,"title":"Hello","content":"World","date":"..."}]
+//  That string is what actually gets stored in the browser.
+// -------------------------------------------------------------
+function saveToLocalStorage() {
+  const serialized = JSON.stringify(notes);
+  //  JSON.stringify() walks the array and encodes every object,
+  //  string, and number into valid JSON text.
+
+  localStorage.setItem(STORAGE_KEY, serialized);
+  //  setItem(key, value) writes the string to LocalStorage.
+  //  If the key already exists its value is silently overwritten,
+  //  which is exactly what we want — we always mirror the current
+  //  state of the notes array, nothing more.
+}
+
+
+// -------------------------------------------------------------
+// loadFromLocalStorage()
+//
+//  Reads the stored JSON string from LocalStorage, parses it
+//  back into a JavaScript array, and returns it.
+//  Returns an empty array [] if nothing has been saved yet.
+//
+//  Why JSON.parse()?
+//  LocalStorage gives us back the raw string we stored.
+//  JSON.parse() reverses JSON.stringify() — it reads the text
+//  and reconstructs the original JavaScript data structure
+//  (our array of note objects) so we can work with it normally.
+// -------------------------------------------------------------
+function loadFromLocalStorage() {
+  const stored = localStorage.getItem(STORAGE_KEY);
+  //  getItem(key) returns the stored string, or null if the
+  //  key has never been set.
+
+  if (stored === null) {
+    // Nothing saved yet — this is a brand-new visitor.
+    // Return an empty array so the caller can decide what to do.
+    return [];
+  }
+
+  // JSON.parse() can throw a SyntaxError if the stored string
+  // is somehow corrupted. We wrap it in try/catch so a bad
+  // value never crashes the whole app — we just start fresh.
+  try {
+    return JSON.parse(stored);
+    //  JSON.parse() returns the reconstructed JavaScript value.
+    //  In our case that's always an array of note objects.
+  } catch (error) {
+    console.warn('CloudNote: could not parse saved data. Starting fresh.', error);
+    return [];
+  }
+}
+
+
+// -------------------------------------------------------------
+// 4. HELPER — formatDate()
 //    Converts a JavaScript Date object into a human-readable
 //    string like "June 17, 2026 at 3:04 PM".
 // -------------------------------------------------------------
@@ -236,6 +320,11 @@ function handleSave() {
 
   // Re-draw all cards to reflect the updated array.
   renderNotes();
+
+  // Persist the updated array to LocalStorage so this change
+  // survives a page refresh. We call this AFTER renderNotes()
+  // so the UI and storage always update together.
+  saveToLocalStorage();
 }
 
 
@@ -300,6 +389,11 @@ function deleteNote(id) {
 
   // Re-draw to reflect the removal.
   renderNotes();
+
+  // Sync LocalStorage with the notes array now that one item
+  // has been filtered out. The deleted note will not come back
+  // on the next page load.
+  saveToLocalStorage();
 }
 
 
@@ -424,28 +518,62 @@ navTabs.forEach(tab => {
 // =============================================================
 //  13. INITIALISATION — runs once when the page first loads
 //
-//  Seed a couple of example notes so the app doesn't look
-//  empty on first visit, then render the initial view.
+//  Decision tree:
+//    1. Ask LocalStorage if any notes have been saved before.
+//    2. YES → load them into the notes array and render.
+//    3. NO  → seed two example notes, save them to LocalStorage
+//             (so the next refresh loads them), then render.
+//
+//  This ensures returning users always see their own data, while
+//  brand-new users get a helpful starting point instead of a
+//  blank, confusing screen.
 // =============================================================
 (function init() {
-  // Pre-load two example notes so new visitors see a real UI.
-  notes = [
-    {
-      id:      Date.now() - 2000,
-      title:   'Welcome to CloudNote ☁️',
-      content: 'This is your personal note-taking space. Click the edit icon to change a note, or the trash icon to delete it. Hit "Save Note" above to add your own!',
-      date:    formatDate(new Date()),
-    },
-    {
-      id:      Date.now() - 1000,
-      title:   'Keyboard Shortcuts',
-      content: 'Press Enter in the title field to jump to the content area. Press Ctrl+Enter (Cmd+Enter on Mac) inside the content area to save your note instantly.',
-      date:    formatDate(new Date()),
-    },
-  ];
 
-  // Draw the initial set of cards.
+  // --- Step 1: Ask LocalStorage what it has ---
+  const savedNotes = loadFromLocalStorage();
+  //  loadFromLocalStorage() returns either:
+  //    • An array of note objects  → user has visited before
+  //    • An empty array []         → first-time visitor
+
+  if (savedNotes.length > 0) {
+    // --- Step 2: Returning user — restore their notes ---
+    //  We assign the parsed array directly to our global `notes`
+    //  variable. From this point the rest of the app works exactly
+    //  as if the notes had been created this session.
+    notes = savedNotes;
+
+  } else {
+    // --- Step 3: First-time visitor — seed example notes ---
+    //  The key check: savedNotes.length === 0 is ONLY true when
+    //  LocalStorage returned null (key never set) OR when the user
+    //  has deleted all their notes. Either way, seeding is safe
+    //  because we never reach here if real saved data exists.
+    notes = [
+      {
+        id:      Date.now() - 2000,
+        title:   'Welcome to CloudNote ☁️',
+        content: 'This is your personal note-taking space. Click the edit icon to change a note, or the trash icon to delete it. Hit "Save Note" above to add your own!',
+        date:    formatDate(new Date()),
+      },
+      {
+        id:      Date.now() - 1000,
+        title:   'Keyboard Shortcuts',
+        content: 'Press Enter in the title field to jump to the content area. Press Ctrl+Enter (Cmd+Enter on Mac) inside the content area to save your note instantly.',
+        date:    formatDate(new Date()),
+      },
+    ];
+
+    // Immediately persist the seed notes so that a refresh will
+    // load them from LocalStorage instead of re-seeding.
+    // Without this call the seed notes would vanish on refresh.
+    saveToLocalStorage();
+  }
+
+  // Draw the initial set of cards regardless of which path above
+  // we took — the `notes` array is now populated either way.
   renderNotes();
+
 })();
 // The parentheses at the end immediately invoke this function —
 // it's called an IIFE (Immediately Invoked Function Expression).
