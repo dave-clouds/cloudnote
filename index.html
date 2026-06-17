@@ -111,6 +111,23 @@
       </section>
 
       <!-- ----------------------------------------
+           SEARCH BAR — Notes only
+           Hidden when the To-Do tab is active.
+           Shown/hidden by switchTab() in app.js.
+      ----------------------------------------- -->
+      <div class="search-bar-area" id="notes-search-area">
+        <input
+          type="text"
+          id="search-input"
+          class="search-input"
+          placeholder="Search notes..."
+          autocomplete="off"
+        />
+        <!-- The search icon sits inside the bar as a decorative label -->
+        <span class="search-icon" aria-hidden="true">🔍</span>
+      </div>
+
+      <!-- ----------------------------------------
            WORKSPACE GRID
            This div is populated by app.js
       ----------------------------------------- -->
