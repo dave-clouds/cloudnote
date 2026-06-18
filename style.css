@@ -93,14 +93,23 @@ body {
 .sidebar-brand {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  gap: 12px; /* Changed from var(--spacing-sm) to 12px for a slightly cleaner layout with your new image logo */
   padding: 0 var(--spacing-lg) var(--spacing-lg);
   border-bottom: 1px solid rgba(255,255,255,0.07);
 }
 
+/* KEEP THIS: It doesn't hurt anything to leave it here */
 .brand-icon {
   font-size: 1.6rem;
   line-height: 1;
+}
+
+/* ADD THIS NEW RULE HERE: This targets your new image logo */
+.brand-logo {
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+  flex-shrink: 0;
 }
 
 .brand-name {
