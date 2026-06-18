@@ -1,153 +1,152 @@
-# ☁️ CloudNote
+# CloudNote
 
-A clean, modern, client-side productivity dashboard built with vanilla HTML, CSS, and JavaScript. CloudNote lets users create and manage personal notes and to-do tasks entirely within the browser — no server, no database, no sign-up required. All data is persisted automatically using the browser's built-in `localStorage` API, with notes and tasks stored under independent keys so they never interfere with each other.
-
-The codebase is intentionally written with heavy inline comments to serve as a learning resource. Every function explains the JavaScript concept it demonstrates alongside the feature it implements.
+A clean, modern, client-side productivity dashboard built with vanilla HTML, CSS, and JavaScript. CloudNote lets users create and manage personal notes and to-do tasks entirely within the browser — no server, no database, no sign-up required. All data persists automatically using the browser's built-in `localStorage` API, with notes and tasks stored under independent keys so they never interfere with each other.
 
 ---
 
-## 🌐 Live Preview
+## Table of Contents
 
-**[https://dave-clouds.github.io/cloudnote/](https://dave-clouds.github.io/cloudnote/)**
-
----
-
-## 📋 Table of Contents
-
-1. [Project Overview](#-project-overview)
-2. [Features](#-features)
-3. [Technologies Used](#-technologies-used)
-4. [File Structure](#-file-structure)
-5. [How It Works](#-how-it-works)
-6. [LocalStorage Architecture](#-localstorage-architecture)
-7. [Getting Started](#-getting-started)
-8. [Future Roadmap](#-future-roadmap)
-9. [Author](#-author)
+1. [Overview](#overview)
+2. [Features](#features)
+3. [Technologies Used](#technologies-used)
+4. [File Structure](#file-structure)
+5. [How It Works](#how-it-works)
+6. [LocalStorage Architecture](#localstorage-architecture)
+7. [Getting Started](#getting-started)
+8. [Keyboard Shortcuts](#keyboard-shortcuts)
 
 ---
 
-## 🌐 Project Overview
+## Overview
 
-CloudNote is a fully functional, single-page productivity dashboard with two independent modules:
+CloudNote is a fully functional, single-page productivity dashboard with two independent modules accessible from a responsive sidebar:
 
-- **My Notes** — a full CRUD note-taking system with real-time search, a responsive card grid, and an auto-expanding editor
-- **To-Do List** — a task manager with custom checkboxes, completion tracking, and a live counter badge
+- **Notes** — a full CRUD note-taking system with real-time search, a responsive card grid, and an auto-expanding editor.
+- **To-Do** — a task manager with custom-styled checkboxes, completion tracking, and a live counter badge.
 
-Both modules persist their data independently through `localStorage`, meaning everything survives page refreshes and browser restarts without any backend.
+The sidebar features a branded logo image, inline SVG navigation icons (file-text for Notes, check-square for To-Do), and collapses into a compact horizontal top bar on narrow mobile screens. Both modules persist their data independently through `localStorage`, meaning everything survives page refreshes and browser restarts with no backend required.
 
 ---
 
-## ✨ Features
+## Features
 
-### 📝 Notes (Full CRUD)
+### Notes (Full CRUD)
+
 - **Create** — Write a note with a title and body, then save it instantly.
-- **Read** — All saved notes are displayed in a responsive CSS Grid card layout.
+- **Read** — All saved notes display in a responsive CSS Grid card layout.
 - **Update** — Click the edit icon on any card to reload it into the form for changes.
-- **Delete** — Remove any note permanently (with a confirmation dialog).
+- **Delete** — Remove any note permanently with a confirmation dialog.
 
-### 🔍 Real-Time Notes Search
-- A search bar sits above the notes grid and filters results on every keystroke — no submit button, no page reload.
+### Real-Time Notes Search
+
+- A search bar above the notes grid filters results on every keystroke — no submit button, no page reload.
 - Searches both the **title** and **content** of every note simultaneously.
 - Matching is **case-insensitive** — searching "cloud" finds "Cloud", "CLOUD", and "cloud" alike.
 - Clearing the search instantly restores all notes.
-- A friendly **"No matching notes found."** empty state appears when no notes match the query.
-- Search never writes to `localStorage` — it is a read-only, in-memory filter over the existing `notes[]` array using `Array.filter()`.
+- A **"No matching notes found."** empty state appears when no notes match the query.
+- Search never writes to `localStorage` — it is a read-only, in-memory filter over the existing `notes[]` array.
 
-### ✍️ Dynamic Note Editor
-- The content textarea starts at a generous height and **auto-expands vertically** as the user types additional lines — no internal scrollbar while writing.
+### Dynamic Note Editor
+
+- The content textarea starts at a generous height and **auto-expands vertically** as the user types — no internal scrollbar while writing.
 - When loading an existing note for editing, the textarea **immediately sizes itself** to fit the loaded content.
-- **Manual resize** is preserved — users can drag the bottom handle to make the editor even taller if needed.
-- Saving or cancelling resets the textarea back to its default height, ready for the next note.
+- **Manual resize** is preserved — users can drag the bottom handle to make the editor even taller.
+- Saving or cancelling resets the textarea back to its default height.
 
-### ✅ To-Do List (Full CRUD)
-- **Create** — Type a task and press Enter or click "Add Task".
-- **Complete** — Click the custom styled checkbox to mark a task done (strikethrough + fade).
+### To-Do List (Full CRUD)
+
+- **Create** — Type a task and press Enter or click "+ Add Task".
+- **Complete** — Click the custom-styled checkbox to mark a task done (strikethrough + fade).
 - **Toggle** — Click again to mark a completed task incomplete.
 - **Delete** — Remove any task instantly with the trash icon.
-- **Counter Badge** — A live pill badge on the sidebar tab always shows the number of incomplete tasks. Disappears when all tasks are done.
+- **Counter Badge** — A live pill badge on the sidebar tab shows the number of incomplete tasks. It disappears when all tasks are done.
 - **Empty State** — A friendly prompt appears when the task list is empty.
 
-### 💾 Independent LocalStorage Persistence
+### Responsive Sidebar UI
+
+- Fixed sidebar on the left with a branded PNG logo (`assets/cloudnote-logo.png`), displayed at 40×40 px with `object-fit: contain` so it never warps.
+- Navigation tabs use inline SVG icons (`file-text` for Notes, `check-square` for To-Do) with `stroke="currentColor"` — icons are soft sky blue at rest and turn bright white on hover and when active.
+- The search bar uses an inline SVG search icon positioned absolutely on the left edge of the input field.
+- At `max-width: 560px` the sidebar collapses into a compact horizontal top bar. The logo scales to 32×32 px, the brand name tightens to a smaller size, and nav tabs stack side-by-side — SVGs and labels stay on one line without wrapping.
+- A mid-tier breakpoint at `max-width: 768px` narrows the sidebar to 200 px and reduces canvas padding for tablet-sized windows.
+
+### LocalStorage Persistence
+
 - Notes save automatically under `cloudnote_data` after every create, update, or delete.
 - Tasks save automatically under `cloudnote_todos` after every create, toggle, or delete.
 - The two storage keys are completely isolated — clearing notes never affects tasks and vice versa.
 - First-time visitors receive two onboarding seed notes. Tasks start from a blank slate.
 
-### ⌨️ Keyboard Shortcuts
-| Shortcut | Action |
-|---|---|
-| `Enter` (in note title field) | Jump focus to the content textarea |
-| `Ctrl + Enter` / `Cmd + Enter` (in note content) | Save the current note |
-| `Enter` (in task input) | Add the new task |
+### Security — HTML Escaping
 
-### 🔒 Secure HTML Escaping
 User-supplied text is never injected into `innerHTML` without sanitization. A dedicated `escapeHTML()` helper converts dangerous characters into safe HTML entities across both modules.
-
-### 📐 Responsive Layout
-- Fixed sidebar on the left; flexible canvas on the right.
-- Notes use `CSS Grid` with `auto-fill` / `minmax(260px, 1fr)` — reflowing automatically from one column to many.
-- Tasks use a full-width flex column that spans all grid cells.
-- Breakpoints at `768px` and `560px` progressively adapt the layout for mobile.
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 | Technology | Role |
 |---|---|
-| **HTML5** | Semantic page structure (`<aside>`, `<main>`, `<article>`, `<time>`) |
-| **CSS3** | Styling, layout (Flexbox + CSS Grid), CSS custom properties, transitions |
-| **Vanilla JavaScript (ES6+)** | All application logic — state, DOM, events, persistence |
-| **localStorage API** | Browser-native key/value persistence (no backend required) |
-| **Feather Icons** | Lightweight SVG icon set for edit and delete actions |
+| **HTML5** | Semantic page structure (`<aside>`, `<main>`, `<nav>`, `<header>`, `<section>`) |
+| **CSS3** | Design system via CSS custom properties, Flexbox, CSS Grid, transitions, responsive media queries |
+| **Vanilla JavaScript (ES6+)** | All application logic — state management, DOM rendering, events, persistence |
+| **localStorage API** | Browser-native key/value persistence — no backend required |
+| **Feather Icons (CDN)** | Lightweight SVG icon set used for edit and delete action buttons on note cards |
+| **Inline SVGs** | Navigation tab icons and search bar icon — rendered sharp at any resolution, color-controlled via `currentColor` |
 
 No build tools, bundlers, or frameworks are used. The project runs directly in any modern browser.
 
 ---
 
-## 📁 File Structure
+## File Structure
 
 ```
 cloudnote/
-├── index.html      # App shell — sidebar, canvas header, notes form, search bar, todo form, workspace
-├── style.css       # Design system — CSS variables, grid, note cards, search bar, todo items, checkboxes
-├── app.js          # All JavaScript — two independent modules (Notes + Todos), search, auto-resize, events
-└── README.md       # Project documentation (this file)
+├── index.html               # App shell — sidebar, canvas header, notes form, search bar, to-do form, workspace
+├── style.css                # Design system — CSS variables, grid, note cards, search bar, to-do items, responsive breakpoints
+├── app.js                   # All JavaScript — Notes module, To-Do module, search, auto-resize, tab switching, events
+├── assets/
+│   ├── cloudnote-logo.png   # Brand logo displayed in the sidebar header
+│   └── icons/
+│       ├── file-text.svg    # Source SVG for the Notes navigation tab icon
+│       ├── check-square.svg # Source SVG for the To-Do navigation tab icon
+│       └── search.svg       # Source SVG for the search bar icon
+└── README.md                # Project documentation (this file)
 ```
 
 Each file has a single, clear responsibility. The two feature modules (Notes and Todos) live inside `app.js` but are clearly sectioned — their state arrays, render functions, CRUD operations, and persistence helpers never cross-reference each other.
 
 ---
 
-## ⚙️ How It Works
+## How It Works
 
 ### Architecture — Single Source of Truth (×2)
 
 Each module owns one global array that is the authoritative record for its data:
 
-```
+```js
 let notes = [];    // owns all note objects  — persisted to 'cloudnote_data'
 let todos = [];    // owns all task objects  — persisted to 'cloudnote_todos'
 ```
 
-The UI is always a *reflection* of these arrays. Every mutation triggers the same three-step cycle:
+The UI is always a reflection of these arrays. Every mutation triggers the same three-step cycle:
 
 ```
 User action
     │
     ▼
-Mutate array[]              ← push / filter / toggle property
+Mutate array[]               ← push / filter / toggle property
     │
     ▼
-render<Module>()            ← wipe workspace, loop array, inject HTML
+render<Module>()             ← wipe workspace, loop array, inject HTML
     │
     ▼
 save<Module>ToLocalStorage() ← JSON.stringify → localStorage
 ```
 
-### Real-Time Search — How It Works
+### Real-Time Search
 
-The search bar listens to the `input` event, which fires on every single keystroke, paste, or deletion — making results update instantly without any submit button.
+The search bar listens to the `input` event, which fires on every keystroke, paste, or deletion — making results update instantly.
 
 ```
 Keystroke → 'input' event fires
@@ -164,37 +163,21 @@ Keystroke → 'input' event fires
                          (show subset)
 ```
 
-`Array.filter()` is a non-destructive read — it builds a temporary array of matches and discards it after rendering. The original `notes[]` array is **never mutated** during search, and `localStorage` is **never written** during search.
+`Array.filter()` is non-destructive — it builds a temporary array of matches and discards it after rendering. The original `notes[]` array is **never mutated** during search and `localStorage` is **never written** during search.
 
-Case-insensitive matching is achieved by lowercasing both the search query and each field before comparing:
+### Auto-Expanding Textarea
 
-```js
-const query    = searchInput.value.trim().toLowerCase();
-const inTitle  = note.title.toLowerCase().includes(query);
-const inContent = note.content.toLowerCase().includes(query);
-return inTitle || inContent;
-```
-
-`renderNotes()` accepts an optional `displayArray` parameter. When called without an argument (all CRUD operations, tab switch) it defaults to the full `notes[]`. When called from `filterNotes()` it receives only the matching subset.
-
-### Auto-Expanding Textarea — How It Works
-
-The textarea auto-resize technique uses a deliberate two-step height calculation triggered on the `input` event:
+The textarea auto-resize technique uses a deliberate two-step height calculation:
 
 ```js
 function autoResizeTextarea() {
-  noteContentInput.style.height = 'auto';            // Step 1: collapse
+  noteContentInput.style.height = 'auto';           // Step 1: collapse to recalculate
   noteContentInput.style.height =
-    noteContentInput.scrollHeight + 'px';            // Step 2: expand to content
+    noteContentInput.scrollHeight + 'px';           // Step 2: expand to content height
 }
 ```
 
-**Why the two-step reset?**
-If only `scrollHeight` were set, the element would never *shrink* when lines are deleted — `scrollHeight` would equal the already-set height. Resetting to `'auto'` first forces the browser to recalculate a fresh minimum, making shrinking possible.
-
-The companion CSS (`overflow: hidden` on `.form-textarea`) prevents a scrollbar from briefly appearing during the height calculation.
-
-`autoResizeTextarea()` is also called in `editNote()` so that when a long note is loaded for editing, the textarea immediately expands to fit rather than showing a scrollbar.
+Resetting to `'auto'` first forces the browser to recalculate a fresh minimum, making shrinking possible when lines are deleted. The companion CSS (`overflow: hidden` on `.form-textarea`) prevents a scrollbar from briefly appearing during the recalculation.
 
 ### Note Data Shape
 
@@ -218,98 +201,37 @@ The companion CSS (`overflow: hidden` on `.form-textarea`) prevents a scrollbar 
 }
 ```
 
-### Notes CRUD Function Map
-
-| Operation | Function | Array Method |
-|---|---|---|
-| Create | `handleSave()` — create path | `Array.push()` |
-| Read | `renderNotes(displayArray?)` | `Array.map()` + `Array.join()` |
-| Search | `filterNotes()` | `Array.filter()` |
-| Update | `handleSave()` — edit path | `Array.findIndex()` + mutation |
-| Delete | `deleteNote(id)` | `Array.filter()` |
-
-### Todos CRUD Function Map
-
-| Operation | Function | Array Method |
-|---|---|---|
-| Create | `addTodo()` | `Array.push()` |
-| Read | `renderTodos()` | `Array.map()` + `Array.join()` |
-| Toggle | `toggleTodo(id)` | `Array.findIndex()` + `!bool` |
-| Delete | `deleteTodo(id)` | `Array.filter()` |
-
-### Custom Checkbox — How It Works
-
-The browser's default `<input type="checkbox">` is hidden with CSS (`opacity: 0; width: 0; height: 0`). A sibling `<span>` is styled as the visible box. When the hidden input receives a `:checked` state, the CSS adjacent sibling selector (`+`) activates the visual fill and checkmark drawn via a `::after` pseudo-element — no images or icon fonts required.
-
 ---
 
-## 💾 LocalStorage Architecture
+## LocalStorage Architecture
 
 ### Independent Keys
 
 ```
 localStorage
-├── cloudnote_data    →  JSON string of the notes[]  array
-└── cloudnote_todos   →  JSON string of the todos[]  array
+├── cloudnote_data    →  JSON string of the notes[] array
+└── cloudnote_todos   →  JSON string of the todos[] array
 ```
 
 The two keys are entirely separate. Operating on one never touches the other.
 
-### Save Flow
+### Save and Load
 
 ```js
-// Notes
+// Save
 localStorage.setItem('cloudnote_data',  JSON.stringify(notes));
-
-// Todos
 localStorage.setItem('cloudnote_todos', JSON.stringify(todos));
-```
 
-`JSON.stringify()` is required because `localStorage` only stores strings. Without it, writing an array produces the useless string `"[object Object]"`.
-
-### Load Flow
-
-```js
+// Load
 const raw = localStorage.getItem('cloudnote_data');  // returns string | null
 const arr = JSON.parse(raw);                          // reconstructs JS array
 ```
 
-`JSON.parse()` reverses the serialization so the rest of the app receives real JavaScript objects. Both loaders are wrapped in `try/catch` to handle any corrupted data gracefully.
-
-### Initialisation Decision Tree (`init()`)
-
-```
-Page loads
-    │
-    ├── NOTES ──────────────────────────────────────────────────
-    │       loadFromLocalStorage()
-    │               │
-    │       ┌───────┴──────────┐
-    │   length > 0         length === 0
-    │   (returning)        (first visit)
-    │       │                   │
-    │   notes = saved      notes = [2 seed notes]
-    │                      saveToLocalStorage()
-    │       │                   │
-    │       └───────┬───────────┘
-    │           renderNotes()
-    │
-    └── TODOS ──────────────────────────────────────────────────
-            loadTodosFromLocalStorage()
-                    │
-            ┌───────┴──────────┐
-        length > 0         length === 0
-        (returning)        (first visit)
-            │                   │
-        todos = saved       todos = []   (blank slate, no seed)
-            │                   │
-            └───────┬───────────┘
-                updateTodoBadge()
-```
+Both loaders are wrapped in `try/catch` to handle any corrupted data gracefully. First-time visitors (empty storage) receive two seed notes; the to-do list starts blank.
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 CloudNote requires no installation, build step, or server.
 
@@ -327,32 +249,20 @@ Install the [Live Server](https://marketplace.visualstudio.com/items?itemName=ri
 
 ### Option 3 — Any Static Host
 
-Upload `index.html`, `style.css`, and `app.js` to GitHub Pages, Netlify, Vercel, or Replit and the app is live immediately.
+Upload the project files to GitHub Pages, Netlify, Vercel, or Replit and the app is live immediately.
 
-> **Note:** Because CloudNote uses `localStorage`, each browser/device maintains its own independent data. Notes and tasks do not sync across devices.
+> **Note:** Because CloudNote uses `localStorage`, each browser and device maintains its own independent data. Notes and tasks do not sync across devices.
 
 ---
 
-## 🗺️ Future Roadmap
+## Keyboard Shortcuts
 
-| Feature | Description |
+| Shortcut | Action |
 |---|---|
-| 🔢 **Note Counter** | Dynamic badge in the sidebar showing the total note count |
-| 📭 **Enhanced Empty State** | Illustrated empty-state UI with a stronger call-to-action |
-| 🌙 **Dark Mode** | Toggle between light and dark themes, preference saved to `localStorage` |
-| 📤 **Export Notes** | Download all notes as a `.json` or `.txt` file for backup |
-| ♿ **Accessibility Improvements** | Full keyboard navigation, ARIA labels, and focus management |
+| `Enter` (in note title field) | Jump focus to the content textarea |
+| `Ctrl + Enter` / `Cmd + Enter` (in note content) | Save the current note |
+| `Enter` (in task input) | Add the new task |
 
 ---
 
-## 👤 Author
-
-**CloudNote** is a portfolio project developed as part of a structured front-end learning curriculum.
-
-- Built with vanilla HTML, CSS, and JavaScript — no frameworks
-- Designed to demonstrate clean architecture, educational code style, and progressive feature development
-- Open for extension, forking, and learning
-
----
-
-*CloudNote — Your ideas, in the cloud.* ☁️
+*CloudNote — Your ideas, in the cloud.*

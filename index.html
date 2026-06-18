@@ -23,19 +23,25 @@
 
       <!-- Branding -->
       <div class="sidebar-brand">
-        <span class="brand-icon">☁️</span>
+        <img
+          src="assets/cloudnote-logo.png"
+          alt="CloudNote Logo"
+          class="brand-logo"
+        />
         <span class="brand-name">CloudNote</span>
       </div>
 
       <!-- Navigation Tabs -->
       <nav class="sidebar-nav">
         <button class="nav-tab active" data-tab="notes">
-          📝 My Notes
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+          Notes
           <!-- Counter badge — updated by JS whenever notes change -->
           <span class="notes-badge" id="notes-badge" style="display:none;"></span>
         </button>
         <button class="nav-tab" data-tab="todo">
-          ✅ To-Do List
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+          To-Do
           <!-- Counter badge — updated by JS whenever todos change -->
           <span class="todo-badge" id="todo-badge" style="display:none;"></span>
         </button>
@@ -61,7 +67,7 @@
 
       <!-- ----------------------------------------
            INPUT FORM AREA — NOTES
-           Visible when "My Notes" tab is active
+           Visible when "Notes" tab is active
       ----------------------------------------- -->
       <section class="input-form-area" id="notes-form">
         <div class="form-card">
@@ -92,7 +98,7 @@
 
       <!-- ----------------------------------------
            INPUT FORM AREA — TO-DO
-           Visible when "To-Do List" tab is active
+           Visible when "To-Do" tab is active
            Hidden on page load (display:none)
       ----------------------------------------- -->
       <section class="input-form-area" id="todo-form" style="display:none;">
@@ -126,7 +132,7 @@
           autocomplete="off"
         />
         <!-- The search icon sits inside the bar as a decorative label -->
-        <span class="search-icon" aria-hidden="true">🔍</span>
+        <span class="search-icon" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
       </div>
 
       <!-- ----------------------------------------
